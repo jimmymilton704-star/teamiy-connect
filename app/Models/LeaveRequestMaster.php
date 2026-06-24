@@ -10,6 +10,18 @@ class LeaveRequestMaster extends Model
 
     protected $guarded = [];
 
+    public $incrementing = false;
+
+    protected function casts(): array
+    {
+        return [
+            'leave_requested_date' => 'datetime',
+            'leave_from' => 'datetime',
+            'leave_to' => 'datetime',
+            'early_exit' => 'boolean',
+        ];
+    }
+
     public function employee()
     {
         return $this->belongsTo(User::class, 'requested_by');

@@ -1,3 +1,12 @@
+@php
+    $topbarAttendanceRules = function_exists('attendance_rules') ? attendance_rules() : [];
+    $topbarAttendances = collect(data_get($topbarAttendanceRules, 'full_details.attendance_details.today', []));
+    $topbarHasOpenAttendance = $topbarAttendances
+        ->whereNotNull('check_in_at')
+        ->whereNull('check_out_at')
+        ->isNotEmpty();
+@endphp
+
 <header class="topbar">
     <button class="icon-btn" data-action="toggle-nav">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -19,7 +28,7 @@
         <input placeholder="Search…">
     </div>
 
-    <a class="top-icon" href="{{ url('/inbox') }}" id="topInbox">
+    <a class="top-icon" href="{{ route('inbox.index') }}" id="topInbox">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="1.9"
              stroke-linecap="round" stroke-linejoin="round">
@@ -28,7 +37,7 @@
         </svg>
     </a>
 
-    <a class="top-icon" href="{{ url('/notices') }}" id="topNotices">
+    <a class="top-icon" href="{{ route('notices.index') }}" id="topNotices">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="1.9"
              stroke-linecap="round" stroke-linejoin="round">
@@ -37,8 +46,12 @@
         </svg>
     </a>
 
-    <button class="att-btn out" id="topAtt" data-action="att-toggle">
-        <span class="pulse"></span>
-        <span id="topAttLabel">Check In</span>
-    </button>
+    <form method="POST" action="{{ $topbarHasOpenAttendance ? route('attendance.check-out') : route('attendance.check-in') }}"
+        style="display:inline" data-attendance-form>
+        @csrf
+        <button class="att-btn {{ $topbarHasOpenAttendance ? 'in' : 'out' }}" id="topAtt" type="submit" data-db-attendance>
+            <span class="pulse"></span>
+            <span id="topAttLabel">{{ $topbarHasOpenAttendance ? 'Check Out' : 'Check In' }}</span>
+        </button>
+    </form>
 </header>

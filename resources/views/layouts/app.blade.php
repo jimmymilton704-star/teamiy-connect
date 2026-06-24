@@ -29,6 +29,25 @@
     <div id="modalRoot"></div>
     <div id="toastRoot"></div>
 
+    <script>
+        window.TEAMIY_ROUTES = {
+            dashboard: @json(route('dashboard')),
+            leave: @json(route('leave.index')),
+            attendance: @json(route('attendance.index')),
+            tada: @json(route('tada.index')),
+            resignation: @json(route('resignation.index')),
+            team: @json(route('team.index')),
+            projects: @json(route('projects.index')),
+            assets: @json(route('assets.index')),
+            holidays: @json(route('holidays.index')),
+            notices: @json(route('notices.index')),
+            meetings: @json(route('meetings.index')),
+            inbox: @json(route('inbox.index')),
+            payroll: @json(route('payroll.index')),
+            settings: @json(route('settings.index')),
+        };
+    </script>
+
     {{-- Core JS first --}}
     <script src="{{ asset('js/app.js') }}"></script>
 

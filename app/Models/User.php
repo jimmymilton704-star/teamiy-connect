@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Models\Role;
 
 #[Fillable([
     'name',
@@ -107,8 +106,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(User::class, 'supervisor_id');
     }
-
-    
 
     /*
     |--------------------------------------------------------------------------

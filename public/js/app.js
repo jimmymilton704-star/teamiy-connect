@@ -1329,7 +1329,11 @@
 
     // ---------- NAVIGATION ----------
     function pageHref(view) {
-        return view === "dashboard" ? "index.html" : view + ".html";
+        if (window.TEAMIY_ROUTES && window.TEAMIY_ROUTES[view]) {
+            return window.TEAMIY_ROUTES[view];
+        }
+
+        return view === "dashboard" ? "/dashboard" : "/" + view;
     }
     TC.pageHref = pageHref;
 
@@ -1353,6 +1357,8 @@
     function renderNav() {
         var nav = $("#nav");
         if (!nav) return;
+        if (nav.querySelector(".nav-item[href]")) return;
+
         var plc = pendingLeaveCount(),
             unc = unreadNotices();
         var h = "";
@@ -1387,6 +1393,8 @@
     function renderTopAtt() {
         var b = $("#topAtt");
         if (!b) return;
+        if (b.hasAttribute("data-db-attendance")) return;
+
         var vm = attVM();
         b.className = "att-btn " + vm.btnClass;
         var lbl = $("#topAttLabel");
@@ -1430,20 +1438,24 @@
         var cardAttBtn = document.getElementById("cardAttBtn");
 
         if (attSummary) attSummary.textContent = vm.summary;
-        if (heroAttBtn) heroAttBtn.textContent = vm.heroLabel;
+        if (heroAttBtn && !heroAttBtn.hasAttribute("data-db-attendance")) {
+            heroAttBtn.textContent = vm.heroLabel;
+        }
         if (attCardValue) attCardValue.textContent = vm.cardValue;
         if (attStatusBadge) attStatusBadge.textContent = vm.statusLabel;
         if (attCardSub) attCardSub.textContent = vm.cardSub;
-        if (cardAttBtn) cardAttBtn.textContent = vm.btnLabel;
+        if (cardAttBtn && !cardAttBtn.hasAttribute("data-db-attendance")) {
+            cardAttBtn.textContent = vm.btnLabel;
+        }
 
         var topAtt = document.getElementById("topAtt");
         var topAttLabel = document.getElementById("topAttLabel");
 
-        if (topAtt) {
+        if (topAtt && !topAtt.hasAttribute("data-db-attendance")) {
             topAtt.className = "att-btn " + vm.btnClass;
         }
 
-        if (topAttLabel) {
+        if (topAttLabel && (!topAtt || !topAtt.hasAttribute("data-db-attendance"))) {
             topAttLabel.textContent = vm.btnLabel;
         }
     }
@@ -1586,7 +1598,7 @@
         },
         logout: function () {
             localStorage.removeItem("tc_loggedIn");
-            location.href = "login.html";
+            location.href = "/login";
         },
         "att-toggle": function () {
             ensureAttSessions();

@@ -38,7 +38,7 @@
 
         <div class="nav-section mt">MY WORK</div>
 
-        <a class="nav-item {{ request()->is('leave*') ? 'active' : '' }}" href="{{ url('/leave') }}">
+        <a class="nav-item {{ request()->routeIs('leave.*') ? 'active' : '' }}" href="{{ route('leave.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4.5" width="18" height="16" rx="2.5"/>
@@ -51,7 +51,7 @@
             @endif
         </a>
 
-        <a class="nav-item {{ request()->is('attendance*') ? 'active' : '' }}" href="{{ url('/attendance') }}">
+        <a class="nav-item {{ request()->routeIs('attendance.*') ? 'active' : '' }}" href="{{ route('attendance.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="9"/>
@@ -60,7 +60,7 @@
             <span>Attendance</span>
         </a>
 
-        <a class="nav-item {{ request()->is('tada*') ? 'active' : '' }}" href="{{ url('/tada') }}">
+        <a class="nav-item {{ request()->routeIs('tada.*') ? 'active' : '' }}" href="{{ route('tada.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 3.5h14v17l-2.5-1.5L14 20.5 12 19l-2 1.5L7.5 19 5 20.5z"/>
@@ -69,9 +69,27 @@
             <span>TADA</span>
         </a>
 
+        <a class="nav-item {{ request()->routeIs('payroll.*') ? 'active' : '' }}" href="{{ route('payroll.index') }}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="5" width="18" height="14" rx="2"/>
+                <path d="M7 10h10M7 14h5"/>
+            </svg>
+            <span>Payroll</span>
+        </a>
+
+        <a class="nav-item {{ request()->routeIs('resignation.*') ? 'active' : '' }}" href="{{ route('resignation.index') }}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 3h9l3 3v15H6z"/>
+                <path d="M14 3v4h4M9 13h6M9 17h4"/>
+            </svg>
+            <span>Resignation</span>
+        </a>
+
         <div class="nav-section mt">COMPANY</div>
 
-        <a class="nav-item {{ request()->is('team-sheet*') ? 'active' : '' }}" href="{{ url('/team-sheet') }}">
+        <a class="nav-item {{ request()->routeIs('team.*') ? 'active' : '' }}" href="{{ route('team.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="8" r="3.2"/>
@@ -81,7 +99,7 @@
             <span>Team Sheet</span>
         </a>
 
-        <a class="nav-item {{ request()->is('projects*') ? 'active' : '' }}" href="{{ url('/projects') }}">
+        <a class="nav-item {{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -89,7 +107,7 @@
             <span>Projects</span>
         </a>
 
-        <a class="nav-item {{ request()->is('assets*') ? 'active' : '' }}" href="{{ url('/assets') }}">
+        <a class="nav-item {{ request()->routeIs('assets.*') ? 'active' : '' }}" href="{{ route('assets.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2.5" y="4.5" width="19" height="12" rx="2"/>
@@ -98,7 +116,7 @@
             <span>Assets</span>
         </a>
 
-        <a class="nav-item {{ request()->is('holidays*') ? 'active' : '' }}" href="{{ url('/holidays') }}">
+        <a class="nav-item {{ request()->routeIs('holidays.*') ? 'active' : '' }}" href="{{ route('holidays.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="4"/>
@@ -107,7 +125,7 @@
             <span>Holidays</span>
         </a>
 
-        <a class="nav-item {{ request()->is('notices*') ? 'active' : '' }}" href="{{ url('/notices') }}">
+        <a class="nav-item {{ request()->routeIs('notices.*') ? 'active' : '' }}" href="{{ route('notices.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5"/>
@@ -120,7 +138,7 @@
             @endif
         </a>
 
-        <a class="nav-item {{ request()->is('meetings*') ? 'active' : '' }}" href="{{ url('/meetings') }}">
+        <a class="nav-item {{ request()->routeIs('meetings.*') ? 'active' : '' }}" href="{{ route('meetings.index') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2.5" y="6" width="13" height="12" rx="2.5"/>
@@ -131,7 +149,7 @@
 
         <div class="nav-divider"></div>
 
-        <a class="nav-item {{ request()->is('profile*') ? 'active' : '' }}" href="{{ url('/profile') }}">
+        <a class="nav-item {{ request()->routeIs('profile.*', 'settings.*') ? 'active' : '' }}" href="{{ route('profile.show') }}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"/>
@@ -143,12 +161,12 @@
 
     <div class="sidebar-foot">
         <div class="user-chip">
-            <a class="avatar av-c0" href="{{ url('/profile') }}"
+            <a class="avatar av-c0" href="{{ route('profile.show') }}"
                style="width:34px;height:34px;font-size:13px;text-decoration:none">
                 {{ $initials ?: 'AK' }}
             </a>
 
-            <a class="meta" href="{{ url('/profile') }}" style="text-decoration:none">
+            <a class="meta" href="{{ route('profile.show') }}" style="text-decoration:none">
                 <div class="nm">{{ $name }}</div>
                 <div class="rl">{{ $role }}</div>
             </a>

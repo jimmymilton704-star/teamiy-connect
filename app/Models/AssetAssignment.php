@@ -8,6 +8,14 @@ class AssetAssignment extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'assigned_date' => 'date',
+            'returned_date' => 'date',
+        ];
+    }
+
     public function employee()
     {
         return $this->belongsTo(User::class, 'user_id');

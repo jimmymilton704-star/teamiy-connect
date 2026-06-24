@@ -69,6 +69,12 @@
 
         $todayCheckInCount = data_get($attendanceRules, 'today_counts.check_in', 0);
         $todayCheckOutCount = data_get($attendanceRules, 'today_counts.check_out', 0);
+        $hasOpenAttendance = $todayAttendances
+            ->whereNotNull('check_in_at')
+            ->whereNull('check_out_at')
+            ->isNotEmpty();
+        $attendanceActionRoute = $hasOpenAttendance ? route('attendance.check-out') : route('attendance.check-in');
+        $attendanceActionLabel = $hasOpenAttendance ? 'Check Out' : 'Check In';
 
         $maxCheckIn = data_get($attendanceRules, 'limits.max_check_in', 3);
         $maxCheckOut = data_get($attendanceRules, 'limits.max_check_out', 3);
@@ -193,15 +199,24 @@
             </div>
 
             <div class="hero-actions">
-                <button class="hero-btn" id="heroAttBtn" data-action="att-toggle" type="button">
-                    Check In
-                </button>
+                <form method="POST" action="{{ $attendanceActionRoute }}" data-attendance-form>
+                    @csrf
+                    <button class="hero-btn" id="heroAttBtn" type="submit" data-db-attendance>
+                        {{ $attendanceActionLabel }}
+                    </button>
+                </form>
 
                 <a class="hero-btn ghost" href="{{ url('/leave?new=1') }}">
                     Request leave
                 </a>
             </div>
         </div>
+
+        @if (session('status'))
+            <div class="card card-pad" style="margin-top:18px;color:#0F766E;background:#ECFDF5;border-color:#A7F3D0">
+                {{ session('status') }}
+            </div>
+        @endif
 
         {{-- TOP CARDS --}}
         <div class="cards-grid auto-250" style="margin-top:18px">
@@ -234,10 +249,13 @@
                     {{ data_get($attendanceRules, 'messages.check_in', 'Tap check in to start your day') }}
                 </div>
 
-                <button class="btn btn-primary btn-block" style="margin-top:14px" id="cardAttBtn" data-action="att-toggle"
-                    type="button">
-                    Check In
-                </button>
+                <form method="POST" action="{{ $attendanceActionRoute }}" style="margin-top:14px" data-attendance-form>
+                    @csrf
+                    <button class="btn {{ $hasOpenAttendance ? 'btn-ghost' : 'btn-primary' }} btn-block" id="cardAttBtn"
+                        type="submit" data-db-attendance>
+                        {{ $attendanceActionLabel }}
+                    </button>
+                </form>
             </div>
 
             {{-- SESSION COUNT CARD --}}
@@ -827,7 +845,13 @@
 
             let started = false;
 
-            const SERVER_SESSIONS = @json($jsTodaySessions);
+            let SERVER_SESSIONS = @json($jsTodaySessions);
+            let dashboardSessions = Array.isArray(SERVER_SESSIONS) ? SERVER_SESSIONS.slice() : [];
+            const ATTENDANCE_ENDPOINTS = {
+                checkIn: @json(route('attendance.check-in')),
+                checkOut: @json(route('attendance.check-out')),
+                csrf: @json(csrf_token())
+            };
 
             const SETTINGS_KEY = "tc_attendance_rules";
 
@@ -852,20 +876,16 @@
                     TC.state.att.sessions = [];
                 }
 
-                if (Array.isArray(SERVER_SESSIONS) && SERVER_SESSIONS.length && !TC.state.att.__serverSeeded) {
-                    const hasTodayLocal = TC.state.att.sessions.some(function(session) {
-                        return session.date === todayKey();
-                    });
+                const today = todayKey();
 
-                    if (!hasTodayLocal) {
-                        TC.state.att.sessions = SERVER_SESSIONS;
-                    }
+                TC.state.att.sessions = TC.state.att.sessions
+                    .filter(function(session) {
+                        return session.date !== today;
+                    })
+                    .concat(dashboardSessions);
 
-                    TC.state.att.__serverSeeded = true;
-
-                    if (typeof TC.save === "function") {
-                        TC.save();
-                    }
+                if (typeof TC.save === "function") {
+                    TC.save();
                 }
 
                 return !!TC.state;
@@ -978,15 +998,11 @@
             }
 
             function getTodaySessions() {
-                if (!window.TC || !TC.state || !TC.state.att) return [];
-
-                if (!Array.isArray(TC.state.att.sessions)) {
-                    TC.state.att.sessions = [];
-                }
+                if (!Array.isArray(dashboardSessions)) dashboardSessions = [];
 
                 const today = todayKey();
 
-                return TC.state.att.sessions.filter(function(session) {
+                return dashboardSessions.filter(function(session) {
                     return session.date === today;
                 });
             }
@@ -1024,6 +1040,98 @@
                 return getTodaySessions().filter(function(session) {
                     return !!session.outEpochMs;
                 }).length;
+            }
+
+            function syncSessionsFromServer(sessions) {
+                SERVER_SESSIONS = Array.isArray(sessions) ? sessions : [];
+                dashboardSessions = SERVER_SESSIONS.slice();
+
+                if (!bootTC()) return;
+
+                const today = todayKey();
+
+                TC.state.att.sessions = TC.state.att.sessions
+                    .filter(function(session) {
+                        return session.date !== today;
+                    })
+                    .concat(dashboardSessions);
+
+                if (typeof TC.save === "function") {
+                    TC.save();
+                }
+            }
+
+            function setAttendanceButtons(active, label, actionUrl) {
+                document.querySelectorAll("[data-attendance-form]").forEach(function(form) {
+                    form.action = actionUrl;
+                });
+
+                const heroAttBtn = document.getElementById("heroAttBtn");
+                const cardAttBtn = document.getElementById("cardAttBtn");
+                const topAtt = document.getElementById("topAtt");
+                const topAttLabel = document.getElementById("topAttLabel");
+
+                if (heroAttBtn) heroAttBtn.textContent = label;
+
+                if (cardAttBtn) {
+                    cardAttBtn.textContent = label;
+                    cardAttBtn.className = "btn " + (active ? "btn-ghost" : "btn-primary") + " btn-block";
+                }
+
+                if (topAtt) {
+                    topAtt.className = "att-btn " + (active ? "in" : "out");
+                }
+
+                if (topAttLabel) {
+                    topAttLabel.textContent = label;
+                }
+            }
+
+            function applyAttendanceState(payload) {
+                const active = !!payload.has_open_attendance;
+
+                syncSessionsFromServer(payload.sessions || []);
+                setAttendanceButtons(
+                    active,
+                    payload.action_label || (active ? "Check Out" : "Check In"),
+                    payload.action_url || (active ? ATTENDANCE_ENDPOINTS.checkOut : ATTENDANCE_ENDPOINTS.checkIn)
+                );
+                renderLiveAttendance();
+
+                if (payload.message) {
+                    notify(payload.message);
+                }
+            }
+
+            function submitAttendance(form) {
+                const button = form.querySelector("button");
+
+                if (button) {
+                    button.disabled = true;
+                }
+
+                fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRF-TOKEN": ATTENDANCE_ENDPOINTS.csrf
+                    }
+                }).then(function(response) {
+                    if (!response.ok) {
+                        throw new Error("Attendance request failed.");
+                    }
+
+                    return response.json();
+                }).then(function(payload) {
+                    applyAttendanceState(payload);
+                }).catch(function() {
+                    notify("Attendance could not be saved. Please try again.");
+                }).finally(function() {
+                    if (button) {
+                        button.disabled = false;
+                    }
+                });
             }
 
             function canPerformAttendanceAction() {
@@ -1096,7 +1204,7 @@
             }
 
             function renderLiveAttendance() {
-                if (!bootTC()) return;
+                bootTC();
 
                 const settings = loadSettings();
                 const sessions = getTodaySessions();
@@ -1235,28 +1343,6 @@
                 }, 1000);
             }
 
-            document.addEventListener("click", function(e) {
-                const attBtn = e.target.closest("[data-action='att-toggle']");
-
-                if (!attBtn) return;
-
-                const result = canPerformAttendanceAction();
-
-                if (!result.ok) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-
-                    notify(result.message);
-                    renderLiveAttendance();
-                    return false;
-                }
-
-                setTimeout(function() {
-                    renderLiveAttendance();
-                }, 30);
-            }, true);
-
             document.addEventListener("DOMContentLoaded", function() {
                 bootTC();
                 applySettingsToInputs();
@@ -1272,6 +1358,13 @@
                         readSettingsFromInputs();
                         renderLiveAttendance();
                         notify("Attendance rules updated.");
+                    });
+                });
+
+                document.querySelectorAll("[data-attendance-form]").forEach(function(form) {
+                    form.addEventListener("submit", function(e) {
+                        e.preventDefault();
+                        submitAttendance(form);
                     });
                 });
 
