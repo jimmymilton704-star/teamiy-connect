@@ -189,7 +189,14 @@
                     · {{ $maxCheckIn }} check-ins and {{ $maxCheckOut }} check-outs allowed.
                 </div>
             </div>
+            @php
+                $todayShortLeaves = $employee->timeLeaves->filter(function ($leave) {
+                    return \Carbon\Carbon::parse($leave->issue_date)->isSameDay(today()) &&
+                        in_array($leave->status, ['pending', 'approved']);
+                });
+            @endphp
 
+            
             {{-- LEAVE CARD --}}
             <div class="card card-pad clickable" onclick="window.location.href='{{ url('/leave') }}'">
                 <div class="spread">
@@ -220,6 +227,26 @@
                     · Rejected {{ $leaveBalance['rejected'] }}
                     · Types {{ $leaveBalance['types'] }}
                 </div>
+                <br>
+                @if ($todayShortLeaves->isNotEmpty())
+                    <div class="spread">
+                        <span class="lbl">Short leave</span>
+
+                        
+                    </div>
+                    <div style="margin-top:14px;display:flex;align-items:baseline;gap:6px">
+
+
+                        <span style="font-size:13px;color:#94A3B8;font-weight:600">
+                            @foreach ($todayShortLeaves as $shortLeave)
+                                {{ \Carbon\Carbon::parse($shortLeave->start_time)->format('h:i A') }}
+                                -
+                                {{ \Carbon\Carbon::parse($shortLeave->end_time)->format('h:i A') }}
+                                ({{ ucfirst($shortLeave->status) }})
+                            @endforeach
+                        </span>
+                    </div>
+                @endif
             </div>
 
             {{-- ASSETS CARD --}}
@@ -764,27 +791,33 @@
                 }
 
                 fetch(form.action, {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRF-TOKEN": ATTENDANCE_ENDPOINTS.csrf
-                    }
-                }).then(function(response) {
-                    if (!response.ok) {
-                        throw new Error("Attendance request failed.");
-                    }
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRF-TOKEN": ATTENDANCE_ENDPOINTS.csrf
+                        }
+                    })
+                    .then(async function(response) {
+                        const payload = await response.json().catch(() => ({}));
 
-                    return response.json();
-                }).then(function(payload) {
-                    applyAttendanceState(payload);
-                }).catch(function() {
-                    notify("Attendance could not be saved. Please try again.");
-                }).finally(function() {
-                    if (button) {
-                        button.disabled = false;
-                    }
-                });
+                        if (!response.ok) {
+                            throw new Error(payload.message || "Attendance request failed.");
+                        }
+
+                        return payload;
+                    })
+                    .then(function(payload) {
+                        applyAttendanceState(payload);
+                    })
+                    .catch(function(error) {
+                        notify(error.message || "Attendance could not be saved. Please try again.");
+                    })
+                    .finally(function() {
+                        if (button) {
+                            button.disabled = false;
+                        }
+                    });
             }
 
             function canPerformAttendanceAction() {
