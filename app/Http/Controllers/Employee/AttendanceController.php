@@ -11,6 +11,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Models\Company;
+use App\Models\Holiday;
+use App\Models\LeaveRequestMaster;
+use App\Models\TimeLeave;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +45,15 @@ class AttendanceController extends Controller
     public function checkIn(Request $request): RedirectResponse|JsonResponse
     {
         $employee = $this->employee();
+        $blockedMessage = $this->checkAttendanceBlockReason($employee);
+
+        if ($blockedMessage) {
+            if ($request->expectsJson()) {
+                return response()->json($this->attendanceState($blockedMessage), 422);
+            }
+
+            return back()->with('status', $blockedMessage);
+        }
         $maxCheckInPerDay = 3;
 
 
@@ -129,7 +142,7 @@ class AttendanceController extends Controller
         $checkIn = Carbon::parse($attendanceDate . ' ' . $attendance->check_in_at);
         $checkOut = now();
 
-   
+
         $workedSeconds = $checkIn->diffInSeconds($checkOut);
 
         $attendance->update([
@@ -191,5 +204,70 @@ class AttendanceController extends Controller
                 ? abs($checkOut->diffInMilliseconds($checkIn, false))
                 : 0,
         ];
+    }
+
+    private function checkAttendanceBlockReason($employee): ?string
+    {
+        $today = today();
+        $nowTime = now()->format('H:i:s');
+
+        if ($this->isCompanyWeekend($employee, $today)) {
+            return 'Today is company weekend. You cannot check in.';
+        }
+
+        if ($this->isCompanyHoliday($employee, $today)) {
+            return 'Today is company holiday. You cannot check in.';
+        }
+
+        $fullDayLeave = LeaveRequestMaster::where('requested_by', $employee->id)
+            ->whereIn('status', ['approved', 'pending'])
+            ->whereDate('leave_from', '<=', $today)
+            ->whereDate('leave_to', '>=', $today)
+            ->exists();
+
+        if ($fullDayLeave) {
+            return 'You have a leave request for today. You cannot check in.';
+        }
+
+        $shortLeave = TimeLeave::where('requested_by', $employee->id)
+            ->whereIn('status', ['approved', 'pending'])
+            ->whereDate('issue_date', $today)
+            ->where('start_time', '<=', $nowTime)
+            ->where('end_time', '>=', $nowTime)
+            ->first();
+
+        Log::info('Short leave check', [
+            'employee_id' => $employee->id,
+            'today' => $today->format('Y-m-d'),
+            'now_time' => $nowTime,
+            'short_leave' => $shortLeave?->toArray(),
+        ]);
+        if ($shortLeave) {
+            return 'You have short leave at this time. You cannot check in.';
+        }
+
+        return null;
+    }
+
+    private function isCompanyWeekend($employee, Carbon $date): bool
+    {
+        $company = Company::find($employee->company_id);
+
+        $weekends = $company?->weekend ?? [];
+
+        if (is_string($weekends)) {
+            $weekends = json_decode($weekends, true) ?: [];
+        }
+
+        $weekends = array_map('intval', $weekends);
+
+        return in_array($date->dayOfWeek, $weekends, true);
+    }
+
+    private function isCompanyHoliday($employee, Carbon $date): bool
+    {
+        return Holiday::where('company_id', $employee->company_id)
+            ->whereDate('event_date', $date)
+            ->exists();
     }
 }
