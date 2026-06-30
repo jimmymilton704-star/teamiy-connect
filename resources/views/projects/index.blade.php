@@ -479,7 +479,7 @@
                     $initials = $parts->map(fn($part) => strtoupper(mb_substr($part, 0, 1)))->take(2)->implode('') ?: 'NA';
                 @endphp
 
-                <div class="task-row" data-task-id="{{ $task->id }}">
+                <div class="task-row" data-task-id="{{ $task->id }}" onclick="openTaskModal({{ $task->id }})">
 
                     <div class="task-check {{ $isDone ? 'done' : '' }}"
                          onclick="toggleTaskDone(event, this)"
@@ -491,7 +491,7 @@
                     </div>
 
                     <div style="flex:1;min-width:0">
-                        <div onclick="openTaskModal({{ $task->id }})"
+                        <div 
                              style="font-size:14px;font-weight:700;color:{{ $isDone ? '#94A3B8' : '#1E293B' }};text-decoration:{{ $isDone ? 'line-through' : 'none' }};cursor:pointer">
                             {{ $task->name }}
                         </div>
