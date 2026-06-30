@@ -12,16 +12,21 @@
     @php
         $initials = collect(explode(' ', (string) $employee->name))
             ->filter()
-            ->map(fn ($part) => strtoupper(substr($part, 0, 1)))
+            ->map(fn($part) => strtoupper(substr($part, 0, 1)))
             ->take(2)
             ->implode('');
         $avatar = ltrim((string) ($employee->avatar ?? ''), '/');
         $avatarUrl = null;
 
         if ($avatar !== '') {
-            $avatarUrl = str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')
-                ? $avatar
-                : asset(str_starts_with($avatar, 'storage/') || str_starts_with($avatar, 'assets/') ? $avatar : 'storage/'.$avatar);
+            $avatarUrl =
+                str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')
+                    ? $avatar
+                    : asset(
+                        str_starts_with($avatar, 'storage/') || str_starts_with($avatar, 'assets/')
+                            ? $avatar
+                            : 'storage/' . $avatar,
+                    );
         }
     @endphp
 
@@ -37,7 +42,8 @@
                 <div class="settings-heading">
                     <span>{{ $employee->employee_code ?: 'Employee Profile' }}</span>
                     <h1>{{ $employee->name }}</h1>
-                    <p>{{ $employee->post?->post_name ?? 'Employee' }} at {{ $employee->company?->name ?? 'Teamiy Connect' }}</p>
+                    <p>{{ $employee->post?->post_name ?? 'Employee' }} at
+                        {{ $employee->company?->name ?? 'Teamiy Connect' }}</p>
                 </div>
             </div>
 
@@ -56,7 +62,8 @@
         @endif
 
         <div class="settings-layout">
-            <form class="card settings-form" method="POST" action="{{ route('settings.update') }}" enctype="multipart/form-data">
+            <form class="card settings-form" method="POST" action="{{ route('settings.update') }}"
+                enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -75,11 +82,12 @@
                         <div class="settings-photo-preview avatar-fallback">{{ $initials ?: 'TC' }}</div>
                     @endif
 
-                    <label class="settings-upload">
-                        <span>Upload new photo</span>
-                        <small>JPG, PNG or WEBP up to 2 MB</small>
-                        <input type="file" name="avatar" accept="image/png,image/jpeg,image/webp">
-                    </label>
+                    <label class="btn btn-sm" style="background:#EAF5FB;color:var(--primary);display:flex;"><svg width="16"
+                            height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5-5 5 5M12 5v12"></path>
+                        </svg>Upload new photo<input type="file" accept="image/*" name="avatar" data-action="photo-change"
+                            style="display:none"></label>
                 </div>
 
                 <div class="settings-form-grid">
@@ -118,7 +126,8 @@
                         <select name="gender">
                             <option value="">Select gender</option>
                             @foreach (['male' => 'Male', 'female' => 'Female', 'other' => 'Other'] as $value => $label)
-                                <option value="{{ $value }}" @selected(old('gender', $employee->gender) === $value)>{{ $label }}</option>
+                                <option value="{{ $value }}" @selected(old('gender', $employee->gender) === $value)>{{ $label }}
+                                </option>
                             @endforeach
                         </select>
                     </label>
@@ -128,7 +137,8 @@
                         <select name="marital_status">
                             <option value="">Select status</option>
                             @foreach (['single' => 'Single', 'married' => 'Married', 'divorced' => 'Divorced', 'widowed' => 'Widowed'] as $value => $label)
-                                <option value="{{ $value }}" @selected(old('marital_status', $employee->marital_status) === $value)>{{ $label }}</option>
+                                <option value="{{ $value }}" @selected(old('marital_status', $employee->marital_status) === $value)>{{ $label }}
+                                </option>
                             @endforeach
                         </select>
                     </label>
@@ -188,7 +198,8 @@
                         </div>
                         <div>
                             <span>Office Time</span>
-                            <strong>{{ $employee->officeTime?->opening_time ?: '-' }} - {{ $employee->officeTime?->closing_time ?: '-' }}</strong>
+                            <strong>{{ $employee->officeTime?->opening_time ?: '-' }} -
+                                {{ $employee->officeTime?->closing_time ?: '-' }}</strong>
                         </div>
                     </div>
                 </div>

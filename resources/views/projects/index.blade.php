@@ -16,15 +16,43 @@
             justify-content: center;
         }
 
+        .tc-pagination nav>div:first-child {
+            display: none !important;
+        }
+
+        .tc-pagination nav>div:last-child {
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .tc-pagination nav>div:last-child>div:first-child {
+            display: none !important;
+        }
+
+        .tc-pagination nav>div:last-child>div:last-child {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tc-pagination nav>div:last-child>div:last-child>span {
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         .tc-pagination a,
-        .tc-pagination span {
-            display: inline-flex;
+        .tc-pagination span span,
+        .tc-pagination span[aria-current="page"] span {
+            display: inline-flex !important;
             align-items: center;
             justify-content: center;
             min-width: 38px;
             height: 38px;
-            padding: 0 14px;
-            margin: 0 4px;
             border-radius: 10px;
             border: 1px solid #E2E8F0;
             background: #FFFFFF;
@@ -35,15 +63,15 @@
         }
 
         .tc-pagination a:hover {
-            background: #F47B26;
-            border-color: #F47B26;
-            color: #FFFFFF;
+            background: #F47B26 !important;
+            border-color: #F47B26 !important;
+            color: #FFFFFF !important;
         }
 
         .tc-pagination span[aria-current="page"] span {
-            background: #F47B26;
-            border-color: #F47B26;
-            color: #FFFFFF;
+            background: #F47B26 !important;
+            border-color: #F47B26 !important;
+            color: #FFFFFF !important;
         }
 
         .tc-pagination span[aria-disabled="true"] span {
@@ -157,7 +185,7 @@
         </div>
 
         <div class="tc-pagination">
-            {{ $projects->links() }}
+            {{ $projects->onEachSide(1)->links() }}
         </div>
 
         <div class="card" style="margin-top:18px">

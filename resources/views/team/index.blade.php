@@ -75,12 +75,29 @@
             box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .3);
         }
 
-        .team-c0 { background: #3498DB; }
-        .team-c1 { background: #805AD5; }
-        .team-c2 { background: #E28400; }
-        .team-c3 { background: #319C7A; }
-        .team-c4 { background: #C65378; }
-        .team-c5 { background: #456FC5; }
+        .team-c0 {
+            background: #3498DB;
+        }
+
+        .team-c1 {
+            background: #805AD5;
+        }
+
+        .team-c2 {
+            background: #E28400;
+        }
+
+        .team-c3 {
+            background: #319C7A;
+        }
+
+        .team-c4 {
+            background: #C65378;
+        }
+
+        .team-c5 {
+            background: #456FC5;
+        }
 
         .team-pill {
             font-size: 11.5px;
@@ -180,39 +197,113 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        .tc-pagination {
+            margin-top: 18px;
+        }
+
+        .tc-pagination nav {
+            display: flex;
+            justify-content: center;
+        }
+
+        .tc-pagination nav>div:first-child {
+            display: none !important;
+        }
+
+        .tc-pagination nav>div:last-child {
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .tc-pagination nav>div:last-child>div:first-child {
+            display: none !important;
+        }
+
+        .tc-pagination nav>div:last-child>div:last-child {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tc-pagination nav>div:last-child>div:last-child>span {
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tc-pagination a,
+        .tc-pagination span span,
+        .tc-pagination span[aria-current="page"] span {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            height: 38px;
+           
+            border-radius: 10px;
+            border: 1px solid #E2E8F0;
+            background: #FFFFFF;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .tc-pagination a:hover {
+            background: #F47B26 !important;
+            border-color: #F47B26 !important;
+            color: #FFFFFF !important;
+        }
+
+        .tc-pagination span[aria-current="page"] span {
+            background: #F47B26 !important;
+            border-color: #F47B26 !important;
+            color: #FFFFFF !important;
+        }
+
+        .tc-pagination span[aria-disabled="true"] span {
+            opacity: .45;
+            cursor: not-allowed;
+        }
     </style>
 @endpush
 
 @section('content')
     @php
-        $memberPayload = $members->getCollection()->values()->map(function ($member, int $index): array {
-            $parts = collect(explode(' ', (string) $member->name))->filter();
-            $initials = $parts->map(fn ($part) => strtoupper(mb_substr($part, 0, 1)))->take(2)->implode('') ?: 'TM';
-            $role = $member->post->post_name ?? 'Employee';
-            $department = $member->department->dept_name ?? 'General';
-            $email = $member->work_email ?: $member->email;
+        $memberPayload = $members
+            ->getCollection()
+            ->values()
+            ->map(function ($member, int $index): array {
+                $parts = collect(explode(' ', (string) $member->name))->filter();
+                $initials = $parts->map(fn($part) => strtoupper(mb_substr($part, 0, 1)))->take(2)->implode('') ?: 'TM';
+                $role = $member->post->post_name ?? 'Employee';
+                $department = $member->department->dept_name ?? 'General';
+                $email = $member->work_email ?: $member->email;
 
-            return [
-                'id' => $member->id,
-                'name' => $member->name ?? 'Team member',
-                'initials' => $initials,
-                'color' => 'team-c'.($index % 6),
-                'role' => $role,
-                'department' => $department,
-                'branch' => $member->branch->name ?? '-',
-                'email' => $email ?: '-',
-                'personalEmail' => $member->email ?: '-',
-                'phone' => $member->phone ?: '-',
-                'manager' => $member->supervisor->name ?? 'No supervisor assigned',
-                'joined' => optional($member->joining_date)->format('d M Y') ?: '-',
-                'employeeCode' => $member->employee_code ?: '-',
-                'employmentType' => ucfirst((string) ($member->employment_type ?: '-')),
-                'userType' => ucfirst((string) ($member->user_type ?: '-')),
-                'status' => $member->is_active ? 'Active' : 'Inactive',
-                'statusClass' => $member->is_active ? 'active' : 'inactive',
-                'gender' => ucfirst((string) ($member->gender ?: '-')),
-            ];
-        });
+                return [
+                    'id' => $member->id,
+                    'name' => $member->name ?? 'Team member',
+                    'initials' => $initials,
+                    'color' => 'team-c' . $index % 6,
+                    'role' => $role,
+                    'department' => $department,
+                    'branch' => $member->branch->name ?? '-',
+                    'email' => $email ?: '-',
+                    'personalEmail' => $member->email ?: '-',
+                    'phone' => $member->phone ?: '-',
+                    'manager' => $member->supervisor->name ?? 'No supervisor assigned',
+                    'joined' => optional($member->joining_date)->format('d M Y') ?: '-',
+                    'employeeCode' => $member->employee_code ?: '-',
+                    'employmentType' => ucfirst((string) ($member->employment_type ?: '-')),
+                    'userType' => ucfirst((string) ($member->user_type ?: '-')),
+                    'status' => $member->is_active ? 'Active' : 'Inactive',
+                    'statusClass' => $member->is_active ? 'active' : 'inactive',
+                    'gender' => ucfirst((string) ($member->gender ?: '-')),
+                ];
+            });
     @endphp
 
     <div class="wrap">
@@ -224,7 +315,7 @@
                 </svg>
                 <input id="teamSearch" placeholder="Search by name, department..." autocomplete="off">
             </div>
-            
+
             <span style="font-size:13px;color:#94A3B8;font-weight:700" id="teamMemberCount">
                 {{ $members->total() }} members
             </span>
@@ -232,16 +323,17 @@
 
         <div class="cards-grid auto-258" id="teamGrid">
             @forelse ($memberPayload as $member)
-                <button class="card card-pad team-card" type="button" data-team-card
-                    data-member-id="{{ $member['id'] }}"
-                    data-search="{{ strtolower($member['name'].' '.$member['role'].' '.$member['department'].' '.$member['email']) }}">
+                <button class="card card-pad team-card" type="button" data-team-card data-member-id="{{ $member['id'] }}"
+                    data-search="{{ strtolower($member['name'] . ' ' . $member['role'] . ' ' . $member['department'] . ' ' . $member['email']) }}">
                     <div class="row" style="gap:12px;align-items:flex-start">
                         <div class="team-avatar {{ $member['color'] }}">{{ $member['initials'] }}</div>
                         <div style="min-width:0;flex:1;text-align:left">
-                            <div style="font-size:14.5px;font-weight:900;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                            <div
+                                style="font-size:14.5px;font-weight:900;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                                 {{ $member['name'] }}
                             </div>
-                            <div style="font-size:12.5px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                            <div
+                                style="font-size:12.5px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                                 {{ $member['role'] }}
                             </div>
                         </div>
@@ -258,7 +350,8 @@
                             <rect x="3" y="5" width="18" height="14" rx="2"></rect>
                             <path d="M3 7l9 6 9-6"></path>
                         </svg>
-                        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $member['email'] }}</span>
+                        <span
+                            style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $member['email'] }}</span>
                     </div>
                 </button>
             @empty
@@ -266,7 +359,9 @@
             @endforelse
         </div>
 
-        <div style="margin-top:18px">{{ $members->links() }}</div>
+        <div class="tc-pagination">
+            {{ $members->onEachSide(1)->links() }}
+        </div>
     </div>
 
     <div id="teamMemberModalRoot" style="display:none">
