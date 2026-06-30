@@ -443,7 +443,8 @@
                         $parts->map(fn($part) => strtoupper(mb_substr($part, 0, 1)))->take(2)->implode('') ?: 'NA';
                 @endphp
 
-                <div class="task-row" data-task-id="{{ $task->id }}" data-status="{{ $filterStatus }}" onclick="openTaskModal({{ $task->id }})" style="cursor:pointer;">
+                <div class="task-row" data-task-id="{{ $task->id }}" data-status="{{ $filterStatus }}"
+                    onclick="openTaskModal({{ $task->id }})" style="cursor:pointer;">
 
                     <div class="task-check {{ $isDone ? 'done' : '' }}" onclick="toggleTaskDone(event, this)"
                         data-task-id="{{ $task->id }}" style="cursor:pointer">
@@ -453,7 +454,7 @@
                     </div>
 
                     <div style="flex:1;min-width:0">
-                        <div 
+                        <div
                             style="font-size:14px;font-weight:700;color:{{ $isDone ? '#94A3B8' : '#1E293B' }};text-decoration:{{ $isDone ? 'line-through' : 'none' }};cursor:pointer">
                             {{ $task->name }}
                         </div>
@@ -545,14 +546,7 @@
                         </div>
                     </div>
 
-                    <div class="checklist-box">
-                        <div id="modalChecklistTitle"
-                            style="font-size:12.5px;font-weight:900;color:#64748B;letter-spacing:.03em;margin-bottom:8px">
-                            CHECKLISTS
-                        </div>
-
-                        <div id="modalChecklists"></div>
-                    </div>
+                    
                 </div>
 
                 <div class="task-modal-comments">
@@ -635,11 +629,11 @@
                 const initials = getInitials(name);
 
                 return `
-                <div class="row" style="gap:8px;margin-bottom:6px">
-                    <span class="avatar av-c${index % 6}" style="width:30px;height:30px;font-size:11px">${initials}</span>
-                    <span style="font-size:13.5px;font-weight:800;color:#1E293B">${escapeHtml(name)}</span>
-                </div>
-            `;
+            <div class="row" style="gap:8px;margin-bottom:6px">
+                <span class="avatar av-c${index % 6}" style="width:30px;height:30px;font-size:11px">${initials}</span>
+                <span style="font-size:13.5px;font-weight:800;color:#1E293B">${escapeHtml(name)}</span>
+            </div>
+        `;
             }).join('');
 
             const descWrap = document.getElementById('modalDescriptionWrap');
@@ -652,30 +646,6 @@
                 descWrap.style.display = 'none';
                 desc.innerText = '';
             }
-
-            document.getElementById('modalChecklistTitle').innerText =
-                `CHECKLISTS · ${task.checklists.length}`;
-
-            document.getElementById('modalChecklists').innerHTML = task.checklists.length ?
-                task.checklists.map(item => `
-                <div class="checklist-item">
-                    <span class="checklist-dot ${item.is_completed ? 'done' : ''}">
-                        ${item.is_completed ? '✓' : ''}
-                    </span>
-
-                    <div style="min-width:0;flex:1">
-                        <div style="font-size:13px;font-weight:800;color:#1E293B">
-                            ${escapeHtml(item.name)}
-                        </div>
-                        <div style="font-size:12.5px;color:#64748B;margin-top:3px">
-                            Assigned to ${escapeHtml(item.assignee)}
-                        </div>
-                    </div>
-                </div>
-            `).join('') :
-                `<div style="font-size:13px;color:#94A3B8;text-align:center;padding:10px 0">
-                    No checklist found.
-               </div>`;
 
             renderComments(task.comments || []);
 

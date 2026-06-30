@@ -146,7 +146,7 @@
 
         .team-member-modal-head {
             height: 74px;
-            background: linear-gradient(120deg, #044d6e, #057DB0 60%, #16A6DE);
+            /* background: linear-gradient(120deg, #044d6e, #057DB0 60%, #16A6DE); */
             position: relative;
         }
 
@@ -154,7 +154,7 @@
             position: absolute;
             top: 14px;
             right: 14px;
-            color: #fff;
+            color: #0a0a0a;
             opacity: .9;
             border: 0;
             background: transparent;
