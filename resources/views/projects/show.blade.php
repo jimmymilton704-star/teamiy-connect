@@ -17,7 +17,8 @@
 
         @php
             $status = strtolower(str_replace(' ', '_', $project->status));
-            $barClass = $status === 'completed' || $status === 'done' ? 'green' : ($status === 'on_hold' ? 'amber' : '');
+            $barClass =
+                $status === 'completed' || $status === 'done' ? 'green' : ($status === 'on_hold' ? 'amber' : '');
 
             $projectBadgeClass = match ($status) {
                 'completed', 'done' => 'badge-green',
@@ -84,6 +85,33 @@
                         {{ $totalTasks }}
                     </div>
                 </div>
+                <div>
+                    <div class="kicker">TEAM</div>
+
+                    <div class="member-stack" style="margin-top:5px">
+                        @forelse($project->members as $member)
+                            @php
+                                $parts = collect(explode(' ', (string) $member->name))->filter();
+
+                                $initials =
+                                    $parts
+                                        ->map(fn($part) => strtoupper(mb_substr($part, 0, 1)))
+                                        ->take(2)
+                                        ->implode('') ?:
+                                    'TM';
+                            @endphp
+
+                            <span class="avatar av-c{{ $loop->index % 6 }}" title="{{ $member->name }}"
+                                style="width:30px;height:30px;font-size:11px">
+                                {{ $initials }}
+                            </span>
+                        @empty
+                            <span style="font-size:12px;color:#94A3B8;font-weight:700">
+                                No members
+                            </span>
+                        @endforelse
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -114,10 +142,8 @@
             <div class="spread" style="padding:16px 18px;border-bottom:1px solid #F1F5F9">
                 <span class="section-title" style="margin-right:auto">Tasks</span>
 
-                <select id="taskFilter"
-                        class="select"
-                        onchange="filterTasks()"
-                        style="width:auto;padding:8px 11px;font-size:12.5px">
+                <select id="taskFilter" class="select" onchange="filterTasks()"
+                    style="width:auto;padding:8px 11px;font-size:12.5px">
                     <option value="all">All</option>
                     <option value="to_do">To Do</option>
                     <option value="in_progress">In Progress</option>
@@ -148,11 +174,8 @@
                     };
                 @endphp
 
-                <div class="task-row"
-                     data-task-id="{{ $task->id }}"
-                     data-status="{{ $filterStatus }}"
-                     onclick="toggleTaskDone(this)"
-                     style="cursor:pointer">
+                <div class="task-row" data-task-id="{{ $task->id }}" data-status="{{ $filterStatus }}"
+                    onclick="toggleTaskDone(this)" style="cursor:pointer">
 
                     <div class="task-check {{ $isDone ? 'done' : '' }}">
                         @if ($isDone)
@@ -161,7 +184,8 @@
                     </div>
 
                     <div style="flex:1;min-width:0">
-                        <div style="font-size:14px;font-weight:700;color:{{ $isDone ? '#94A3B8' : '#1E293B' }};text-decoration:{{ $isDone ? 'line-through' : 'none' }}">
+                        <div
+                            style="font-size:14px;font-weight:700;color:{{ $isDone ? '#94A3B8' : '#1E293B' }};text-decoration:{{ $isDone ? 'line-through' : 'none' }}">
                             {{ $task->name }}
                         </div>
 
@@ -201,9 +225,9 @@
             rows.forEach(row => {
                 const status = row.dataset.status;
 
-                row.style.display = selected === 'all' || status === selected
-                    ? 'flex'
-                    : 'none';
+                row.style.display = selected === 'all' || status === selected ?
+                    'flex' :
+                    'none';
             });
         }
 
@@ -211,22 +235,22 @@
             const taskId = row.dataset.taskId;
 
             fetch(`/tasks/${taskId}/toggle-status`, {
-                method: 'PATCH',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (!data.status) return;
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.status) return;
 
-                location.reload();
-            })
-            .catch(() => {
-                alert('Task status update failed.');
-            });
+                    location.reload();
+                })
+                .catch(() => {
+                    alert('Task status update failed.');
+                });
         }
     </script>
 @endpush

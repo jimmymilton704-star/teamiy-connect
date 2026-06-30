@@ -169,11 +169,42 @@
                             </div>
                         </div>
 
-                        <div style="margin-left:auto">
+                        <div>
                             <div class="kicker">TASKS</div>
                             <div style="font-size:13px;font-weight:700;color:#1E293B;margin-top:2px" class="tc-num">
                                 {{ $totalTasks }}
                             </div>
+                        </div>
+
+                        <div class="member-stack" style="margin-left:auto">
+                            @forelse($project->members->take(4) as $member)
+                                @php
+                                    $parts = collect(explode(' ', (string) $member->name))->filter();
+
+                                    $initials =
+                                        $parts
+                                            ->map(fn($part) => strtoupper(mb_substr($part, 0, 1)))
+                                            ->take(2)
+                                            ->implode('') ?:
+                                        'TM';
+                                @endphp
+
+                                <span class="avatar av-c{{ $loop->index % 6 }}" title="{{ $member->name }}"
+                                    style="width:26px;height:26px;font-size:10px">
+                                    {{ $initials }}
+                                </span>
+                            @empty
+                                <span style="font-size:12px;color:#94A3B8;font-weight:700">
+                                    No members
+                                </span>
+                            @endforelse
+
+                            @if ($project->members->count() > 4)
+                                <span class="avatar"
+                                    style="width:26px;height:26px;font-size:10px;background:#E2E8F0;color:#475569">
+                                    +{{ $project->members->count() - 4 }}
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>

@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 
 class ProjectController extends Controller
 {
@@ -16,57 +17,54 @@ class ProjectController extends Controller
     public function index(): View
     {
         $employee = $this->employee();
-        $projectIds = $this->assignedIds($employee, 'project');
 
-        return view('projects.index', [
-            'employee' => $employee,
-            'projects' => Project::query()
-                ->withCount([
-                    'tasks',
-                    'tasks as tasks_done_count' => function ($q) {
-                        $q->whereIn('status', ['done', 'Done', 'completed', 'Completed']);
-                    }
-                ])
-                ->where(function (Builder $query) use ($employee, $projectIds): void {
-                    $query->whereIn('id', $projectIds)
-                        ->orWhereHas('leaders', fn(Builder $leaderQuery) => $leaderQuery->whereKey($employee->id))
-                        ->orWhere('branch_id', $employee->branch_id);
+        $projects = $this->visibleProjectsQuery($employee)
+            ->with([
+                'members:id,name',
+                'leaders:id,name',
+            ])
+            ->withCount([
+                'tasks',
+                'tasks as tasks_done_count' => fn ($query) => $query
+                    ->whereIn('status', $this->doneStatuses()),
+            ])
+            ->latest('start_date')
+            ->paginate(12);
 
-                    if ($employee->department_id) {
-                        $query->orWhere('department_ids', 'like', '%' . $employee->department_id . '%');
-                    }
-                })
-                ->latest('start_date')
-                ->paginate(12),
-            'tasks' => Task::query()
-                ->with('project')
-                ->where(function (Builder $query) use ($employee): void {
-                    $query->whereIn('id', $this->assignedIds($employee, 'task'))
-                        ->orWhereHas('checklists', fn(Builder $checklistQuery) => $checklistQuery->where('assigned_to', $employee->id));
-                })
-                ->latest('end_date')
-                ->limit(12)
-                ->get(),
-        ]);
+        $tasks = Task::query()
+            ->with('project:id,name')
+            ->where(fn (Builder $query) => $query
+                ->whereIn('id', $this->assignedIds($employee, 'task'))
+                ->orWhereHas('checklists', fn (Builder $checklistQuery) => $checklistQuery
+                    ->where('assigned_to', $employee->id)
+                )
+            )
+            ->latest('end_date')
+            ->limit(12)
+            ->get();
+
+        return view('projects.index', compact('employee', 'projects', 'tasks'));
     }
-    public function show(Project $project)
+
+    public function show(Project $project): View
     {
-        $user = auth()->user();
-        $adminId = $user->id;
+        $employee = $this->employee();
 
-
+        abort_unless(
+            $this->visibleProjectsQuery($employee)->whereKey($project->id)->exists(),
+            403
+        );
 
         $project->load([
-            'tasks' => function ($q) {
-                $q->latest();
-            },
-            'tasks.project'
+            'members:id,name',
+            'leaders:id,name',
+            'tasks' => fn ($query) => $query->latest(),
         ]);
 
         $totalTasks = $project->tasks->count();
 
         $doneTasks = $project->tasks
-            ->whereIn('status', ['done', 'Done', 'completed', 'Completed'])
+            ->whereIn('status', $this->doneStatuses())
             ->count();
 
         $todoTasks = $project->tasks
@@ -77,7 +75,9 @@ class ProjectController extends Controller
             ->whereIn('status', ['in_progress', 'In Progress'])
             ->count();
 
-        $progress = $totalTasks > 0 ? round(($doneTasks / $totalTasks) * 100) : 0;
+        $progress = $totalTasks > 0
+            ? round(($doneTasks / $totalTasks) * 100)
+            : 0;
 
         return view('projects.show', compact(
             'project',
@@ -88,19 +88,49 @@ class ProjectController extends Controller
             'progress'
         ));
     }
-    public function toggleTaskStatus(Task $task)
+
+    public function toggleTaskStatus(Task $task): JsonResponse
     {
+        $employee = $this->employee();
 
+        abort_unless(
+            $this->visibleProjectsQuery($employee)->whereKey($task->project_id)->exists(),
+            403
+        );
 
-        $doneStatuses = ['done', 'Done', 'completed', 'Completed'];
+        $isDone = in_array($task->status, $this->doneStatuses(), true);
 
         $task->update([
-            'status' => in_array($task->status, $doneStatuses) ? 'To Do' : 'Done'
+            'status' => $isDone ? 'To Do' : 'Done',
         ]);
 
         return response()->json([
             'status' => true,
             'task_status' => $task->status,
         ]);
+    }
+
+    private function visibleProjectsQuery($employee): Builder
+    {
+        $projectIds = $this->assignedIds($employee, 'project');
+
+        return Project::query()
+            ->where(fn (Builder $query) => $query
+                ->whereIn('id', $projectIds)
+                ->orWhereHas('leaders', fn (Builder $leaderQuery) => $leaderQuery
+                    ->whereKey($employee->id)
+                )
+                ->orWhere('branch_id', $employee->branch_id)
+                ->when(
+                    $employee->department_id,
+                    fn (Builder $query) => $query
+                        ->orWhere('department_ids', 'like', "%{$employee->department_id}%")
+                )
+            );
+    }
+
+    private function doneStatuses(): array
+    {
+        return ['done', 'Done', 'completed', 'Completed'];
     }
 }
