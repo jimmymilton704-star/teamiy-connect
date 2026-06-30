@@ -49,4 +49,8 @@ class Task extends Model
     {
         return $this->hasMany(TaskChecklist::class, 'task_id');
     }
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class, 'task_id');
+    }
 }

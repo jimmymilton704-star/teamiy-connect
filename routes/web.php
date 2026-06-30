@@ -25,7 +25,7 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'index'])->name('login');
-    Route::get('/auth/login', fn () => redirect()->route('login'))->name('auth.index');
+    Route::get('/auth/login', fn() => redirect()->route('login'))->name('auth.index');
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('auth.login');
@@ -63,7 +63,13 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::patch('/tasks/{task}/toggle-status', [ProjectController::class, 'toggleTaskStatus'])
-    ->name('tasks.toggle-status');
+        ->name('tasks.toggle-status');
+
+    Route::patch('/tasks/{task}/status', [ProjectController::class, 'updateTaskStatus'])
+        ->name('tasks.update-status');
+
+    Route::post('/tasks/{task}/comments', [ProjectController::class, 'storeTaskComment'])
+        ->name('tasks.comments.store');
     Route::get('/employee-assets', [AssetController::class, 'index'])->name('assets.index');
     Route::post('/employee-assets/{assetAssignment}/return-request', [AssetController::class, 'requestReturn'])->name('assets.return-request');
     Route::get('/holidays', [HolidayController::class, 'index'])->name('holidays.index');
